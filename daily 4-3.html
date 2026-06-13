@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Collection System</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        /* --- Premium Ocean Architect Theme --- */
+        :root {
+            --primary: #0F4C75; /* Deep Ocean Navy */
+            --primary-hover: #1B263B; /* Darker Navy */
+            --accent: #3282B8; /* Bright Teal/Ocean Blue */
+            --bg-color: #F0F4F8; /* Soft Light Gray/Blue */
+            --text-color: #1B263B;
+            --input-bg: #FFFFFF;
+            --border-color: #BBE1FA; /* Very light cyan border */
+            --success: #28A745;
+            --warning: #E67E22;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            margin: 0; padding: 2rem 1rem; display: flex; justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container { width: 100%; max-width: 1200px; }
+        h1, h2, h3 { color: var(--primary); font-weight: 600; margin-top: 0; letter-spacing: -0.5px;}
+        
+        .card {
+            border-radius: 12px;
+            padding: 24px; margin-bottom: 24px; background: #FFFFFF;
+            box-shadow: 0 10px 30px rgba(15, 76, 117, 0.08); /* Ocean tinted shadow */
+            border: 1px solid rgba(187, 225, 250, 0.4);
+        }
+        
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #3282B8; text-transform: uppercase; letter-spacing: 0.5px;}
+        
+        input, select {
+            width: 100%; padding: 14px; margin-bottom: 16px;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            box-sizing: border-box; background-color: var(--input-bg); font-size: 15px; color: var(--text-color);
+            transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(50, 130, 184, 0.15); }
+        
+        button {
+            background-color: var(--input-bg); color: var(--primary);
+            border: 1px solid var(--border-color); padding: 12px 18px;
+            border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        button:hover { border-color: var(--accent); color: var(--accent); background-color: #f0f8ff; }
+        
+        button.primary { background-color: var(--primary); color: white; border: none; width: 100%; padding: 14px; font-size: 15px; box-shadow: 0 4px 12px rgba(15, 76, 117, 0.2);}
+        button.primary:hover { background-color: var(--accent); color: white; transform: translateY(-1px); box-shadow: 0 6px 14px rgba(50, 130, 184, 0.3);}
+        
+        button.danger { border: 1px solid #dc3545; color: #dc3545; padding: 6px 12px; font-size: 12px; background: white;}
+        button.danger:hover { background-color: #dc3545; color: white; }
+        
+        button.action-btn { background-color: #e1f5fe; color: var(--accent); border: none; padding: 6px 12px; font-size: 12px; border-radius: 6px;}
+        button.action-btn:hover { background-color: var(--accent); color: white;}
+        
+        .alert { padding: 14px 16px; border-radius: 8px; margin-bottom: 20px; display: none; font-weight: 500; font-size: 14px;}
+        .alert.success { background-color: #e8f5e9; color: #1b5e20; display: block; border: 1px solid #c8e6c9;}
+        .alert.error { background-color: #ffebee; color: #b71c1c; display: block; border: 1px solid #ffcdd2;}
+        .alert.info { background-color: #e1f5fe; color: #0d47a1; display: block; border: 1px solid #b3e5fc; }
+        
+        /* Tables */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border-color);}
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 600px; background: white;}
+        th, td { border-bottom: 1px solid var(--border-color); padding: 14px 16px; text-align: left; }
+        th { background-color: #F0F4F8; font-weight: 600; color: var(--primary); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px;}
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8fbff; }
+        
+        .hidden { display: none !important; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;}
+        
+        /* Tabs - Mobile Friendly */
+        .tabs-container { overflow-x: auto; margin-bottom: 24px; -webkit-overflow-scrolling: touch;}
+        .tabs { display: flex; border-bottom: 2px solid var(--border-color); gap: 8px; min-width: max-content;}
+        .tab { padding: 12px 20px; cursor: pointer; border-radius: 8px 8px 0 0; margin-bottom: -2px; font-weight: 600; color: #7f8c8d; transition: all 0.2s; white-space: nowrap;}
+        .tab:hover { color: var(--accent); background: rgba(50, 130, 184, 0.05);}
+        .tab.active { border-bottom: 3px solid var(--accent); color: var(--accent); background: rgba(50, 130, 184, 0.08); }
+
+        /* Stats & Grids */
+        .stat-container { display: flex; gap: 20px; margin-bottom: 24px; flex-wrap: wrap;}
+        .stat-box { flex: 1; min-width: 250px; background: #fff; padding: 24px; border-radius: 12px; font-size: 22px; font-weight: bold; border-left: 6px solid var(--accent); box-shadow: 0 4px 15px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 5px; color: var(--text-color);}
+        .stat-box span { font-size: 13px; color: #7f8c8d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;}
+        .stat-box.success { border-left-color: var(--success); }
+        .stat-box.warning { border-left-color: var(--warning); }
+
+        .two-col, .three-col, .four-col { display: flex; gap: 15px; align-items: end; margin-bottom: 15px; flex-wrap: wrap;}
+        .two-col > div, .three-col > div, .four-col > div { flex: 1; min-width: 200px; width: 100%;}
+
+        .leaderboard-list { list-style: none; padding: 0; margin: 0; }
+        .leaderboard-list li { padding: 14px 16px; background: #F0F4F8; border: 1px solid var(--border-color); margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; font-weight: 600; align-items: center;}
+        
+        /* Graph Container */
+        .chart-container { position: relative; height: 300px; width: 100%; margin-top: 20px;}
+
+        /* Autocomplete */
+        .suggestions-box {
+            position: absolute; top: calc(100% - 10px); left: 0; right: 0;
+            background: #fff; border: 1px solid var(--accent);
+            border-radius: 8px; max-height: 220px; overflow-y: auto;
+            z-index: 100; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .sugg-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid #f0f0f0; font-size: 15px; }
+        .sugg-item:hover { background-color: #f0f8ff; color: var(--accent); }
+
+        /* Drawers */
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 76, 117, 0.6); z-index: 1000; backdrop-filter: blur(3px); opacity: 0; visibility: hidden; transition: 0.3s; }
+        .drawer-overlay.show { opacity: 1; visibility: visible; }
+        .drawer { position: fixed; top: 0; right: -100%; width: 700px; max-width: 100vw; height: 100vh; background: #fff; z-index: 1001; box-shadow: -10px 0 30px rgba(0,0,0,0.15); transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); display: flex; flex-direction: column; }
+        .drawer.show { right: 0; }
+        .drawer-header { padding: 24px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #F0F4F8; }
+        .close-btn { background: none; border: none; font-size: 28px; cursor: pointer; color: var(--primary); padding: 0; line-height: 1; height: 30px;}
+        .drawer-body { padding: 24px; overflow-y: auto; flex: 1; }
+        
+        .user-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-btn { background: #fff; border: 1px solid var(--border-color); color: var(--primary); padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+        /* Mobile Adjustments (Upscaler) */
+        @media (max-width: 768px) {
+            body { padding: 1rem 0.5rem; }
+            .card { padding: 16px; margin-bottom: 16px; border-radius: 10px;}
+            .stat-box { min-width: 100%; padding: 16px;}
+            .header-bar { flex-direction: column; align-items: flex-start;}
+            .header-bar button { width: 100%; margin-top: 10px;}
+            .drawer-header h2 { font-size: 18px; }
+            .drawer-body { padding: 16px; }
+            .chart-container { height: 250px; }
+        }
+    </style>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <div id="msgBox"></div>
+
+    <div id="login-screen" class="card" style="max-width: 400px; margin: 10vh auto; text-align: center;">
+        <h1 style="color: var(--primary); margin-bottom: 30px; font-size: 28px;">🌊 Ocean Collect</h1>
+        <div style="text-align: left;">
+            <label>User ID</label>
+            <input type="text" id="login-user" placeholder="Enter your ID">
+            <label>Password</label>
+            <input type="password" id="login-pass" placeholder="Enter password">
+            <button class="primary" style="margin-top: 10px; border-radius: 8px;" onclick="login()">Login to Portal</button>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <div class="header-bar">
+            <h1 id="admin-greeting">🛡️ Admin Control</h1>
+            <button onclick="logout()">Secure Logout</button>
+        </div>
+        
+        <div class="tabs-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchAdminTab('admin-data-tab', this)">Dashboard</div>
+                <div class="tab" onclick="switchAdminTab('admin-reports-tab', this)">Statements</div>
+                <div class="tab" onclick="switchAdminTab('admin-settle-tab', this)">Settlements</div>
+                <div class="tab" onclick="switchAdminTab('admin-client-tab', this)">Clients</div>
+                <div class="tab" onclick="switchAdminTab('admin-user-client-tab', this)">Staff Dir</div>
+                <div class="tab" onclick="switchAdminTab('admin-users-tab', this)">Users</div>
+            </div>
+        </div>
+
+        <div id="admin-data-tab">
+            <div class="stat-container">
+                <div class="stat-box"><span>Today's Collections</span> <div id="admin-today-total">₹0.00</div></div>
+                <div class="stat-box success"><span>Grand Total</span> <div id="admin-grand-total">₹0.00</div></div>
+            </div>
+
+            <div class="two-col">
+                <div class="card" style="flex: 2;">
+                    <h3 style="margin-bottom: 10px; color: var(--primary);">📊 Last 7 Days Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="admin-collection-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" style="flex: 1; background-color: var(--bg-color); border:none;">
+                    <h3 style="font-size: 18px; margin-bottom: 15px;">🏆 Top Collectors<br><small style="color: #666; font-size: 13px; font-weight: normal;">(This Month)</small></h3>
+                    <ul class="leaderboard-list" id="top-collectors-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-reports-tab" class="hidden card">
+            <h3>Generate Statements</h3>
+            <div class="four-col">
+                <div>
+                    <label>Period</label>
+                    <select id="admin-report-period" onchange="toggleCustomDates('admin')">
+                        <option value="daily">Daily (Today)</option>
+                        <option value="monthly">Monthly (This Month)</option>
+                        <option value="quarterly">Quarterly (This Quarter)</option>
+                        <option value="yearly">Yearly (This Year)</option>
+                        <option value="custom">Custom Date Range</option>
+                    </select>
+                </div>
+                <div><label>Collector</label><select id="admin-report-collector"></select></div>
+                <div><label>Client</label><select id="admin-report-client"></select></div>
+                <div><button class="primary" onclick="generateReport('admin')">Generate</button></div>
+            </div>
+            
+            <div id="admin-custom-dates" class="three-col hidden">
+                <div><label>From</label><input type="date" id="admin-date-from"></div>
+                <div><label>To</label><input type="date" id="admin-date-to"></div>
+                <div></div>
+            </div>
+
+            <hr style="margin: 24px 0; border: 0; border-top: 1px solid var(--border-color);">
+            <div class="header-bar">
+                <h3 style="margin:0;">Results <span id="admin-report-sum" style="color:var(--accent);"></span></h3>
+                <button onclick="downloadCSV('admin')">📥 Export CSV</button>
+            </div>
+            <div class="table-responsive">
+                <table id="admin-report-table">
+                    <thead><tr><th>Date</th><th>Collector</th><th>SR No</th><th>Client</th><th>Mode</th><th>Amount</th><th>Remarks</th><th>Status</th></tr></thead>
+                    <tbody><tr><td colspan="8" style="text-align: center; padding: 20px; color: #888;">Select parameters and generate...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-settle-tab" class="hidden card">
+            <h3>Collector Settlements</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Clear pending balances when staff hands over the physical cash.</p>
+            <div class="table-responsive">
+                <table id="admin-settle-table">
+                    <thead><tr><th>Collector</th><th>Total</th><th>Received (Paid)</th><th>Pending (Unpaid)</th><th>Action</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-client-tab" class="hidden card">
+            <h3>Add New Client</h3>
+            <div class="two-col">
+                <div><label>SR No.</label><input type="text" id="new-client-sr" placeholder="e.g., 101"></div>
+                <div><label>Client Name</label><input type="text" id="new-client-name" placeholder="e.g., John Doe"></div>
+            </div>
+            <div class="two-col">
+                <div><label>Min Required (₹)</label><input type="number" id="new-client-min" min="0" step="1" value="50"></div>
+                <div><label>Assign To</label><select id="new-client-assign"></select></div>
+            </div>
+            <button class="primary" style="max-width: 250px;" onclick="createClient()">+ Create Client</button>
+
+            <h3 style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 24px;">Client Directory</h3>
+            <div class="table-responsive">
+                <table id="clients-table">
+                    <thead><tr><th>SR No.</th><th>Client Name</th><th>Assigned</th><th>Min</th><th>Total Collected</th><th>Action</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-user-client-tab" class="hidden card">
+            <h3>Staff Client Directory</h3>
+            <label>Select Staff Member</label>
+            <select id="admin-view-user-select" onchange="renderUserClientData()" style="max-width: 400px;">
+                <option value="">-- Select User --</option>
+            </select>
+            <div class="table-responsive" style="margin-top: 20px;">
+                <table id="admin-user-client-table">
+                    <thead><tr><th>SR No</th><th>Client Name</th><th>Min</th><th>Total Collected</th></tr></thead>
+                    <tbody><tr><td colspan="4" style="text-align: center; padding: 20px; color:#888;">Select a user above.</td></tr></tbody>
+                </table>
+            </div>
+            <div style="margin-top: 30px; display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 15px; border-radius: 8px;">
+                <h3 style="margin: 0;">Recent Logs</h3>
+                <button class="primary" style="width: auto; margin: 0; padding: 10px 20px;" onclick="openDrawer()">📂 Open Log Drawer</button>
+            </div>
+        </div>
+
+        <div id="admin-users-tab" class="hidden card">
+            <h3>Create Staff User</h3>
+            <div class="two-col">
+                <div><label>User ID</label><input type="text" id="new-user" placeholder="Username"></div>
+                <div><label>Password</label><input type="password" id="new-pass" placeholder="Password"></div>
+            </div>
+            <button class="primary" style="max-width: 250px;" onclick="createUser()">+ Create Account</button>
+            
+            <h3 style="margin-top: 40px; border-top: 1px solid var(--border-color); padding-top: 24px;">Active Users</h3>
+            <div class="table-responsive" style="max-width: 600px;">
+                <table id="users-table">
+                    <thead><tr><th>User ID</th><th>Role</th><th>Action</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="user-panel" class="hidden">
+        <div class="header-bar">
+            <h1 id="user-greeting">👤 Field Portal</h1>
+            <button onclick="logout()">Logout</button>
+        </div>
+        
+        <div class="tabs-container">
+            <div class="tabs">
+                <div class="tab active" onclick="switchUserTab('user-dash-tab', this)">Dashboard</div>
+                <div class="tab" onclick="switchUserTab('user-entry-tab', this)">New Entry</div>
+                <div class="tab" onclick="switchUserTab('user-reports-tab', this)">Statements</div>
+            </div>
+        </div>
+
+        <div id="user-dash-tab">
+            <div class="stat-container">
+                <div class="stat-box success"><span>Handed Over (Paid)</span> <div id="user-paid-total">₹0.00</div></div>
+                <div class="stat-box warning"><span>Pending (Unpaid)</span> <div id="user-unpaid-total">₹0.00</div></div>
+            </div>
+            
+            <div class="card">
+                <h3>📋 My Clients</h3>
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table id="user-clients-menu">
+                        <thead><tr><th>Name & SR</th><th>Min (₹)</th><th>Total (₹)</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="user-entry-tab" class="hidden">
+            <div class="card" style="max-width: 600px; margin: 0 auto; padding: 30px;">
+                <h3 style="margin-bottom: 24px; color: var(--primary);">📝 Record Collection</h3>
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px;">
+                    <label style="margin: 0;">Search Client</label>
+                    <button class="action-btn" style="font-weight: bold; padding: 6px 12px; cursor: pointer;" onclick="openUserClientsDrawer()">📂 Client List</button>
+                </div>
+                
+                <div style="position: relative; margin-bottom: 20px;">
+                    <input type="text" id="user-client-search" placeholder="Type Name or SR No..." oninput="showSuggestions()" autocomplete="off" style="margin-bottom: 0; padding-right: 40px;">
+                    <button id="clear-search-btn" onclick="clearSearch()" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 26px; color: #888; cursor: pointer; padding: 0; display: none; line-height: 1;">&times;</button>
+                    <div id="client-suggestions" class="suggestions-box hidden"></div>
+                </div>
+
+                <div id="entry-form-details" class="hidden">
+                    <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display:flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color:#666; font-size:14px;">📅 Date:</span>
+                            <span id="entry-date-display" style="font-weight: bold;"></span>
+                        </div>
+                        <div style="display:flex; justify-content: space-between; border-top: 1px dashed #ccc; padding-top: 8px;">
+                            <span style="color:#666; font-size:14px;">💰 Prev Balance:</span>
+                            <span id="entry-prev-balance" style="font-weight: bold; color: var(--accent);">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <label>Amount (₹)</label>
+                    <input type="number" id="entry-amount" step="1" placeholder="Enter amount">
+                    
+                    <label>Payment Mode</label>
+                    <select id="entry-mode">
+                        <option value="Cash">Cash</option>
+                        <option value="UPI">UPI</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                    </select>
+                    
+                    <label>Remarks (Optional)</label>
+                    <input type="text" id="entry-remarks" placeholder="Add notes...">
+                    
+                    <button class="primary" style="margin-top: 15px; font-size: 16px; border-radius: 8px;" onclick="submitEntry()">Submit Secure Entry</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="user-reports-tab" class="hidden card">
+            <h3>My Statements</h3>
+            <div class="three-col">
+                <div>
+                    <label>Period</label>
+                    <select id="user-report-period" onchange="toggleCustomDates('user')">
+                        <option value="daily">Daily (Today)</option>
+                        <option value="monthly">Monthly (This Month)</option>
+                        <option value="custom">Custom Date</option>
+                    </select>
+                </div>
+                <div><label>Client</label><select id="user-report-client"></select></div>
+                <div><button class="primary" onclick="generateReport('user')">Generate</button></div>
+            </div>
+            <div id="user-custom-dates" class="three-col hidden">
+                <div><label>From</label><input type="date" id="user-date-from"></div>
+                <div><label>To</label><input type="date" id="user-date-to"></div>
+                <div></div>
+            </div>
+            <hr style="margin: 24px 0; border: 0; border-top: 1px solid var(--border-color);">
+            <div class="header-bar">
+                <h3 style="margin:0;">Results <span id="user-report-sum" style="color:var(--accent);"></span></h3>
+                <button onclick="downloadCSV('user')">📥 Export CSV</button>
+            </div>
+            <div class="table-responsive">
+                <table id="user-report-table">
+                    <thead><tr><th>Date</th><th>SR No</th><th>Client</th><th>Mode</th><th>Amount</th><th>Status</th><th>Remarks</th></tr></thead>
+                    <tbody><tr><td colspan="7" style="text-align: center; padding: 20px; color:#888;">Select parameters...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="recent-drawer-overlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="recent-drawer" class="drawer">
+    <div class="drawer-header">
+        <h2>📂 Recent Logs</h2>
+        <button class="close-btn" onclick="closeDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body">
+        <div id="drawer-user-filters" class="user-filters"></div>
+        <div class="table-responsive">
+            <table id="drawer-table">
+                <thead><tr><th>Date</th><th>Collector</th><th>SR No</th><th>Client</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="user-clients-drawer-overlay" class="drawer-overlay" onclick="closeUserClientsDrawer()"></div>
+<div id="user-clients-drawer" class="drawer">
+    <div class="drawer-header">
+        <h2>📋 Select Client</h2>
+        <button class="close-btn" onclick="closeUserClientsDrawer()">&times;</button>
+    </div>
+    <div class="drawer-body" style="padding: 10px;">
+        <div class="table-responsive">
+            <table id="drawer-user-clients-table">
+                <thead><tr><th>Client Details</th><th>Action</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- FIREBASE SETUP ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCKFuScMCqVnXQw9jTE7-zwS1ly-JPCYGU",
+        authDomain: "daily--collection.firebaseapp.com",
+        projectId: "daily--collection",
+        storageBucket: "daily--collection.firebasestorage.app",
+        messagingSenderId: "928028994337",
+        appId: "1:928028994337:web:97c535b8e8a82dc245ec60"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let users = []; let collections = []; let clients = [];
+    let currentUser = null; let currentRole = null; let selectedClientForEntry = null;
+    let currentReportData = []; let currentDrawerFilter = 'ALL';
+    let adminChartInstance = null; // Holds the Chart.js instance
+
+    async function syncWithCloud() {
+        try {
+            const usersSnapshot = await db.collection('users').get();
+            users = usersSnapshot.docs.map(doc => doc.data());
+
+            const clientsSnapshot = await db.collection('clients').get();
+            clients = clientsSnapshot.docs.map(doc => doc.data());
+
+            const collectionsSnapshot = await db.collection('collections').get();
+            collections = collectionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            if (users.length === 0) {
+                const defaultAdmin = { username: 'admin', password: 'admin123', role: 'admin' };
+                await db.collection('users').doc('admin').set(defaultAdmin);
+                users.push(defaultAdmin);
+            }
+
+            showMsg("Connected securely to Server!", "success");
+        } catch (error) {
+            console.error(error);
+            showMsg("Failed to connect to the database.", "error");
+        }
+    }
+
+    window.onload = async function() {
+        showMsg("Connecting to Cloud Server...", "info");
+        await syncWithCloud();
+        
+        const savedUser = localStorage.getItem('activeUser');
+        const savedRole = localStorage.getItem('activeRole');
+        
+        if (savedUser && savedRole) {
+            currentUser = savedUser;
+            currentRole = savedRole;
+            
+            if (currentRole === 'admin') {
+                document.getElementById('admin-greeting').innerText = `🛡️ Admin (${currentUser})`;
+                renderAdminView(); switchView('admin-panel');
+            } else {
+                document.getElementById('user-greeting').innerText = `👤 ${currentUser}'s Portal`;
+                renderUserView(); switchView('user-panel');
+            }
+        }
+    };
+
+    function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
+    function getCollections() { return collections; }
+    function getClients() { return clients; }
+    function getUsers() { return users; }
+    function getClientTotal(sr) { return collections.filter(c => c.srNo === sr).reduce((s, c) => s + parseFloat(c.amount), 0); }
+    function getTodayStr() { const d = new Date(); return new Date(d.getTime() - (d.getTimezoneOffset()*60000)).toISOString().split('T')[0]; }
+
+    function showMsg(text, type='success') {
+        const b = document.getElementById('msgBox'); b.className = `alert ${type}`; b.innerText = text;
+        window.scrollTo(0,0); setTimeout(() => b.className = 'alert hidden', 4000);
+    }
+
+    function switchView(id) {
+        ['login-screen', 'admin-panel', 'user-panel'].forEach(v => document.getElementById(v).classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function login() {
+        if (getUsers().length === 0) return showMsg("Connecting... Please wait.", "info");
+
+        const uIn = document.getElementById('login-user').value.trim(); 
+        const pIn = document.getElementById('login-pass').value;
+        const u = getUsers().find(x => x.username === uIn && x.password === pIn);
+        
+        if (u) {
+            currentUser = u.username; currentRole = u.role;
+            localStorage.setItem('activeUser', currentUser);
+            localStorage.setItem('activeRole', currentRole);
+
+            if (u.role === 'admin') {
+                document.getElementById('admin-greeting').innerText = `🛡️ Admin (${currentUser})`;
+                renderAdminView(); switchView('admin-panel');
+            } else {
+                document.getElementById('user-greeting').innerText = `👤 ${currentUser}'s Portal`;
+                renderUserView(); switchView('user-panel');
+            }
+            document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
+        } else {
+            showMsg("Invalid Credentials", "error");
+        }
+    }
+
+    function logout() { 
+        currentUser = null; currentRole = null; 
+        localStorage.removeItem('activeUser'); localStorage.removeItem('activeRole');
+        switchView('login-screen'); 
+    }
+
+    function switchAdminTab(tId, el) {
+        ['admin-data-tab', 'admin-reports-tab', 'admin-settle-tab', 'admin-client-tab', 'admin-user-client-tab', 'admin-users-tab'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById(tId).classList.remove('hidden');
+        document.querySelectorAll('#admin-panel .tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active'); renderAdminView();
+    }
+    
+    function switchUserTab(tId, el) {
+        ['user-dash-tab', 'user-entry-tab', 'user-reports-tab'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById(tId).classList.remove('hidden');
+        document.querySelectorAll('#user-panel .tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active'); 
+        if(tId === 'user-entry-tab') clearSearch();
+        renderUserView();
+    }
+
+    function renderAdminView() {
+        const cols = getCollections(); const today = getTodayStr();
+        let gTotal = 0; let tTotal = 0;
+        cols.forEach(c => { gTotal += parseFloat(c.amount); if(c.date === today) tTotal += parseFloat(c.amount); });
+        document.getElementById('admin-grand-total').innerText = `₹${gTotal.toFixed(2)}`;
+        document.getElementById('admin-today-total').innerText = `₹${tTotal.toFixed(2)}`;
+        
+        renderTop(); 
+        renderAdminChart(); // Draw Chart
+        renderClientsTable(); 
+        renderUsersTable(); 
+        populateAdminUserSelect(); 
+        populateReportClients('admin', getClients());
+        renderSettlementsTable();
+    }
+
+    // --- CHART LOGIC ---
+    function renderAdminChart() {
+        const ctx = document.getElementById('admin-collection-chart');
+        if(!ctx) return;
+
+        // Get last 7 days including today
+        const days = 7;
+        const dataMap = {};
+        for(let i=days-1; i>=0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dStr = new Date(d.getTime() - (d.getTimezoneOffset()*60000)).toISOString().split('T')[0];
+            // Format label as DD/MM for smaller screens
+            const labelStr = dStr.substring(8,10) + "/" + dStr.substring(5,7);
+            dataMap[dStr] = { label: labelStr, total: 0 };
+        }
+
+        getCollections().forEach(c => {
+            if(dataMap[c.date] !== undefined) {
+                dataMap[c.date].total += parseFloat(c.amount);
+            }
+        });
+
+        const labels = Object.values(dataMap).map(d => d.label);
+        const data = Object.values(dataMap).map(d => d.total);
+
+        if(adminChartInstance) adminChartInstance.destroy();
+
+        adminChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Daily Collection (₹)',
+                    data: data,
+                    backgroundColor: '#3282B8',
+                    borderRadius: 6,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#BBE1FA', tickLength: 0 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderTop() {
+        const cols = getCollections(); const d = new Date(); const m = d.getMonth(); const y = d.getFullYear();
+        let sums = {};
+        cols.forEach(c => { const cd = new Date(c.date); if(cd.getFullYear()===y && cd.getMonth()===m) sums[c.collectedBy] = (sums[c.collectedBy]||0)+parseFloat(c.amount); });
+        let leaders = Object.keys(sums).map(u => ({u, t: sums[u]})).sort((a,b)=>b.t-a.t).slice(0,3);
+        const list = document.getElementById('top-collectors-list'); list.innerHTML = '';
+        if(!leaders.length) list.innerHTML = '<li><span style="font-size:14px; color:#888;">No data this month.</span></li>';
+        else {
+            const meds = ['🥇','🥈','🥉'];
+            leaders.forEach((l, i) => list.innerHTML += `<li><span>${meds[i]} ${l.u}</span><span style="color:var(--accent);">₹${l.t.toFixed(2)}</span></li>`);
+        }
+    }
+
+    function renderSettlementsTable() {
+        const tb = document.querySelector('#admin-settle-table tbody'); tb.innerHTML = '';
+        const collectorUsers = getUsers().filter(u => u.role === 'user');
+        if(!collectorUsers.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No collectors found.</td></tr>'; return; }
+
+        collectorUsers.forEach(u => {
+            let total = 0; let paid = 0; let unpaid = 0;
+            getCollections().filter(c => c.collectedBy === u.username).forEach(c => {
+                const amt = parseFloat(c.amount);
+                total += amt;
+                if(c.settled) paid += amt; else unpaid += amt;
+            });
+
+            tb.innerHTML += `
+                <tr>
+                    <td><b style="font-size:15px; color:var(--primary);">${u.username}</b></td>
+                    <td>₹${total.toFixed(2)}</td>
+                    <td style="color:var(--success); font-weight:bold;">₹${paid.toFixed(2)}</td>
+                    <td style="color:var(--warning); font-weight:bold;">₹${unpaid.toFixed(2)}</td>
+                    <td>
+                        ${unpaid > 0 ? `<button class="primary" style="padding: 6px 12px; font-size:12px; width: auto; border-radius: 6px;" onclick="markUserPaid('${u.username}')">Clear ₹${unpaid.toFixed(2)}</button>` : `<span style="color:var(--success); font-size: 12px; font-weight:bold; background:#e8f5e9; padding: 4px 8px; border-radius: 4px;">✓ Cleared</span>`}
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function markUserPaid(username) {
+        if(!confirm(`Confirm marking pending cash from ${username} as Received?`)) return;
+        const pendingDocs = collections.filter(c => c.collectedBy === username && !c.settled);
+        if(pendingDocs.length === 0) return;
+        showMsg("Processing...", "info");
+        
+        const batch = db.batch();
+        pendingDocs.forEach(c => { const ref = db.collection('collections').doc(c.id); batch.update(ref, { settled: true }); });
+        await batch.commit();
+
+        pendingDocs.forEach(c => c.settled = true);
+        showMsg(`Settled balance for ${username}!`);
+        renderAdminView();
+    }
+
+    function openDrawer() { document.getElementById('recent-drawer-overlay').classList.add('show'); document.getElementById('recent-drawer').classList.add('show'); renderDrawerFilters(); renderDrawerTable(currentDrawerFilter); }
+    function closeDrawer() { document.getElementById('recent-drawer-overlay').classList.remove('show'); document.getElementById('recent-drawer').classList.remove('show'); }
+    function renderDrawerFilters() {
+        const uList = getUsers().filter(u => u.role === 'user'); const d = document.getElementById('drawer-user-filters');
+        let html = `<button class="filter-btn ${currentDrawerFilter==='ALL'?'active':''}" onclick="setDrawerFilter('ALL')">All</button>`;
+        uList.forEach(u => html += `<button class="filter-btn ${currentDrawerFilter===u.username?'active':''}" onclick="setDrawerFilter('${u.username}')">${u.username}</button>`);
+        d.innerHTML = html;
+    }
+    function setDrawerFilter(u) { currentDrawerFilter = u; renderDrawerFilters(); renderDrawerTable(u); }
+    function renderDrawerTable(fu) {
+        const tbody = document.querySelector('#drawer-table tbody'); tbody.innerHTML = '';
+        const data = (fu === 'ALL' ? getCollections() : getCollections().filter(c => c.collectedBy === fu)).slice().reverse();
+        if(!data.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No records.</td></tr>'; return; }
+        
+        data.forEach(c => {
+            const status = c.settled ? `<span style="color:var(--success);font-weight:bold;font-size:12px;">Paid</span>` : `<span style="color:var(--warning);font-weight:bold;font-size:12px;">Unpaid</span>`;
+            tbody.innerHTML += `<tr><td>${c.date}</td><td><b>${c.collectedBy}</b></td><td>${c.srNo}</td><td>${c.clientName}</td><td style="color:var(--accent);font-weight:bold;">₹${parseFloat(c.amount).toFixed(2)}</td><td>${status}</td><td><button class="danger" onclick="deleteEntry('${c.id}')">Del</button></td></tr>`;
+        });
+    }
+
+    function openUserClientsDrawer() { document.getElementById('user-clients-drawer-overlay').classList.add('show'); document.getElementById('user-clients-drawer').classList.add('show'); renderUserClientsDrawer(); }
+    function closeUserClientsDrawer() { document.getElementById('user-clients-drawer-overlay').classList.remove('show'); document.getElementById('user-clients-drawer').classList.remove('show'); }
+    function renderUserClientsDrawer() {
+        const myCl = getClients().filter(c => c.assignedTo === currentUser);
+        const tb = document.querySelector('#drawer-user-clients-table tbody'); tb.innerHTML = '';
+        if(!myCl.length) { tb.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:20px;">No clients.</td></tr>'; return; }
+        
+        myCl.forEach(c => {
+            tb.innerHTML += `<tr>
+                <td><b style="font-size:15px; color:var(--primary);">${c.name}</b><br><small style="color:#666;">SR: ${c.srNo} | Min: ₹${c.minAmount}</small></td>
+                <td style="text-align:right;"><button class="action-btn" style="padding: 8px 14px; font-size: 13px; font-weight:bold;" onclick="jumpToEntryFromDrawer('${c.srNo}')">+ Entry</button></td>
+            </tr>`;
+        });
+    }
+
+    function jumpToEntryFromDrawer(sr) {
+        closeUserClientsDrawer();
+        const entryTabBtn = document.querySelectorAll('#user-panel .tab')[1];
+        switchUserTab('user-entry-tab', entryTabBtn);
+        setTimeout(() => { selectClientFromSuggest(sr); document.getElementById('entry-amount').focus(); }, 100);
+    }
+
+    function clearSearch() {
+        const s = document.getElementById('user-client-search'); if (s) s.value = '';
+        document.getElementById('clear-search-btn').style.display = 'none';
+        document.getElementById('client-suggestions').classList.add('hidden');
+        document.getElementById('entry-form-details').classList.add('hidden');
+        selectedClientForEntry = null;
+    }
+
+    function showSuggestions() {
+        const sv = document.getElementById('user-client-search').value.toLowerCase();
+        const suggBox = document.getElementById('client-suggestions'); const clearBtn = document.getElementById('clear-search-btn');
+        clearBtn.style.display = sv.length > 0 ? 'block' : 'none';
+        
+        if (!sv) { clearSearch(); return; }
+        
+        const mc = getClients().filter(c => c.assignedTo === currentUser);
+        const filtered = mc.filter(c => c.name.toLowerCase().includes(sv) || c.srNo.toLowerCase().includes(sv));
+        
+        suggBox.innerHTML = '';
+        if(filtered.length === 0) { suggBox.innerHTML = '<div class="sugg-item" style="color:#888;">No matching clients</div>'; } 
+        else {
+            filtered.forEach(c => {
+                const div = document.createElement('div'); div.className = 'sugg-item';
+                div.innerHTML = `<strong style="color:var(--text-color);">${c.name}</strong> <span style="color:#888; font-size: 13px;">(SR: ${c.srNo})</span>`;
+                div.onclick = () => selectClientFromSuggest(c.srNo); suggBox.appendChild(div);
+            });
+        }
+        suggBox.classList.remove('hidden');
+    }
+
+    function selectClientFromSuggest(sr) {
+        document.getElementById('client-suggestions').classList.add('hidden');
+        selectedClientForEntry = getClients().find(c => c.srNo === sr);
+        document.getElementById('user-client-search').value = `${selectedClientForEntry.name} (SR: ${sr})`;
+        document.getElementById('clear-search-btn').style.display = 'block';
+        
+        const amtInput = document.getElementById('entry-amount'); 
+        amtInput.min = selectedClientForEntry.minAmount; amtInput.value = selectedClientForEntry.minAmount;
+        document.getElementById('entry-date-display').innerText = getTodayStr();
+        document.getElementById('entry-prev-balance').innerText = `₹${getClientTotal(sr).toFixed(2)}`;
+        document.getElementById('entry-form-details').classList.remove('hidden');
+    }
+
+    async function submitEntry() {
+        if(!selectedClientForEntry) return showMsg("Select a client first.", "error");
+        const amt = parseFloat(document.getElementById('entry-amount').value);
+        if(isNaN(amt) || amt < selectedClientForEntry.minAmount) return showMsg(`Minimum amount is ₹${selectedClientForEntry.minAmount}`, "error");
+        
+        const dStr = getTodayStr();
+        if(collections.find(c => c.date === dStr && c.srNo === selectedClientForEntry.srNo)) return showMsg("Collection already recorded today.", "error");
+
+        const payMode = document.getElementById('entry-mode').value;
+        const remarks = document.getElementById('entry-remarks').value || "";
+
+        if(!confirm(`Record Collection?\nClient: ${selectedClientForEntry.name}\nAmount: ₹${amt.toFixed(2)}\nMode: ${payMode}`)) return;
+
+        const id = generateId();
+        const entry = { date: dStr, collectedBy: currentUser, srNo: selectedClientForEntry.srNo, clientName: selectedClientForEntry.name, pay_mode: payMode, amount: amt, remarks, settled: false };
+        
+        try {
+            await db.collection('collections').doc(id).set(entry);
+            collections.push({ id, ...entry });
+            showMsg(`Recorded ₹${amt.toFixed(2)} for ${selectedClientForEntry.name}`);
+            clearSearch(); document.getElementById('entry-remarks').value = ""; 
+            renderUserView();
+        } catch(e) { console.error(e); showMsg("Network error.", "error"); }
+    }
+
+    async function deleteEntry(id) {
+        if(!confirm("Delete this entry?")) return;
+        await db.collection('collections').doc(id).delete();
+        collections = collections.filter(c => c.id !== id);
+        showMsg("Deleted.", "info"); renderAdminView();
+        if(document.getElementById('recent-drawer').classList.contains('show')) renderDrawerTable(currentDrawerFilter);
+    }
+
+    async function createClient() {
+        const sr = document.getElementById('new-client-sr').value.trim(); const name = document.getElementById('new-client-name').value.trim();
+        const min = parseFloat(document.getElementById('new-client-min').value); const assign = document.getElementById('new-client-assign').value;
+        if(!sr || !name || isNaN(min) || assign === 'Unassigned') return showMsg("Fill all details.", "error");
+        if(clients.find(c => c.srNo === sr)) return showMsg("SR No exists!", "error");
+
+        const nc = { srNo: sr, name, minAmount: min, assignedTo: assign };
+        await db.collection('clients').doc(sr).set(nc); clients.push(nc);
+        showMsg("Client Created!"); document.getElementById('new-client-sr').value=''; document.getElementById('new-client-name').value=''; renderAdminView();
+    }
+
+    async function editClient(sr) {
+        const client = clients.find(c => c.srNo === sr); if(!client) return;
+        const newName = prompt(`Update Name for SR ${sr}:`, client.name); if(newName === null) return; 
+        const newMin = prompt(`Update Minimum Amount:`, client.minAmount); if(newMin === null || isNaN(parseFloat(newMin))) return;
+        const newAssign = prompt(`Update Assigned User:`, client.assignedTo); if(newAssign === null) return;
+        if (newAssign !== 'Unassigned' && !users.find(u => u.username === newAssign && u.role === 'user')) return showMsg("Staff doesn't exist!", "error");
+
+        try {
+            await db.collection('clients').doc(sr).update({ name: newName.trim(), minAmount: parseFloat(newMin), assignedTo: newAssign.trim() });
+            client.name = newName.trim(); client.minAmount = parseFloat(newMin); client.assignedTo = newAssign.trim();
+            showMsg("Client updated!"); renderAdminView(); 
+        } catch(e) { console.error(e); showMsg("Update failed.", "error"); }
+    }
+
+    async function deleteClient(sr) {
+        if(!confirm(`Delete client SR: ${sr}?`)) return;
+        await db.collection('clients').doc(sr).delete(); clients = clients.filter(c => c.srNo !== sr); showMsg("Deleted.", "info"); renderAdminView();
+    }
+
+    async function createUser() {
+        const u = document.getElementById('new-user').value.trim(); const p = document.getElementById('new-pass').value;
+        if(!u || !p) return showMsg("Provide both fields.", "error");
+        if(users.find(x => x.username === u)) return showMsg("Username exists!", "error");
+        const nu = { username: u, password: p, role: 'user' };
+        await db.collection('users').doc(u).set(nu); users.push(nu);
+        showMsg("User Created!"); document.getElementById('new-user').value=''; document.getElementById('new-pass').value=''; renderAdminView();
+    }
+
+    async function deleteUser(u) {
+        if(!confirm(`Delete staff account ${u}?`)) return;
+        await db.collection('users').doc(u).delete(); users = users.filter(x => x.username !== u); showMsg("Deleted.", "info"); renderAdminView();
+    }
+
+    function renderClientsTable() {
+        const tb = document.querySelector('#clients-table tbody'); tb.innerHTML = '';
+        getClients().forEach(c => {
+            tb.innerHTML += `<tr><td>${c.srNo}</td><td><b style="color:var(--text-color);">${c.name}</b></td><td><span style="background:#e1f5fe; color:var(--primary); padding:2px 6px; border-radius:4px; font-size:12px;">${c.assignedTo}</span></td><td>₹${c.minAmount}</td><td style="color:var(--accent);font-weight:bold;">₹${getClientTotal(c.srNo).toFixed(2)}</td><td><button class="action-btn" onclick="editClient('${c.srNo}')">Edit</button> <button class="danger" onclick="deleteClient('${c.srNo}')">Del</button></td></tr>`;
+        });
+        const s = document.getElementById('new-client-assign'); s.innerHTML = '<option value="Unassigned">-- Select --</option>';
+        getUsers().filter(u => u.role === 'user').forEach(u => s.innerHTML += `<option value="${u.username}">${u.username}</option>`);
+    }
+
+    function populateAdminUserSelect() {
+        const sel = document.getElementById('admin-view-user-select'); const cv = sel.value; sel.innerHTML = '<option value="">-- Select --</option>';
+        const reportUserSel = document.getElementById('admin-report-collector'); const rcv = reportUserSel.value; reportUserSel.innerHTML = '<option value="ALL">All Users</option>';
+        getUsers().filter(u=>u.role==='user').forEach(u=> { sel.innerHTML+=`<option value="${u.username}">${u.username}</option>`; reportUserSel.innerHTML+=`<option value="${u.username}">${u.username}</option>`; });
+        if(cv) { sel.value = cv; renderUserClientData(); } if(rcv) reportUserSel.value = rcv;
+    }
+
+    function renderUserClientData() {
+        const u = document.getElementById('admin-view-user-select').value; const tb = document.querySelector('#admin-user-client-table tbody'); tb.innerHTML = '';
+        if(!u) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;">Select user above.</td></tr>'; return; }
+        const uc = getClients().filter(c => c.assignedTo === u);
+        if(!uc.length) { tb.innerHTML = `<tr><td colspan="4" style="text-align:center;">No clients.</td></tr>`; return; }
+        uc.forEach(c => tb.innerHTML += `<tr><td>${c.srNo}</td><td><b>${c.name}</b></td><td>₹${c.minAmount}</td><td style="color:var(--accent);font-weight:bold;">₹${getClientTotal(c.srNo).toFixed(2)}</td></tr>`);
+    }
+
+    function renderUsersTable() {
+        const tb = document.querySelector('#users-table tbody'); tb.innerHTML = '';
+        getUsers().forEach(u => tb.innerHTML += `<tr><td><b>${u.username}</b></td><td><span style="background:var(--bg-color); padding:4px 8px; border-radius:6px; font-size:12px;">${u.role.toUpperCase()}</span></td><td>${u.role==='admin'?'-':`<button class="danger" onclick="deleteUser('${u.username}')">Delete</button>`}</td></tr>`);
+    }
+
+    function renderUserView() {
+        const mc = getCollections().filter(c => c.collectedBy === currentUser); const myCl = getClients().filter(c => c.assignedTo === currentUser);
+        let paidTotal = 0; let unpaidTotal = 0;
+        mc.forEach(c => { if(c.settled) paidTotal += parseFloat(c.amount); else unpaidTotal += parseFloat(c.amount); });
+
+        document.getElementById('user-paid-total').innerText = `₹${paidTotal.toFixed(2)}`;
+        document.getElementById('user-unpaid-total').innerText = `₹${unpaidTotal.toFixed(2)}`;
+        
+        const tb = document.querySelector('#user-clients-menu tbody'); tb.innerHTML = '';
+        if(!myCl.length) tb.innerHTML = '<tr><td colspan="3" style="text-align:center;">No assigned clients.</td></tr>';
+        myCl.forEach(c => tb.innerHTML += `<tr><td><b style="color:var(--primary);">${c.name}</b><br><small>SR: ${c.srNo}</small></td><td>₹${c.minAmount}</td><td style="color:var(--accent); font-weight:bold;">₹${getClientTotal(c.srNo).toFixed(2)}</td></tr>`);
+        populateReportClients('user', myCl);
+    }
+
+    function populateReportClients(r, cl) { const sel = document.getElementById(`${r}-report-client`); sel.innerHTML = '<option value="ALL">All Clients</option>'; cl.forEach(c => sel.innerHTML += `<option value="${c.srNo}">${c.name} (SR: ${c.srNo})</option>`); }
+    function toggleCustomDates(r) { const p = document.getElementById(`${r}-report-period`).value; const d = document.getElementById(`${r}-custom-dates`); if(p === 'custom') d.classList.remove('hidden'); else d.classList.add('hidden'); }
+
+    function filterByPeriod(rds, p, fd, td) {
+        const d = new Date(rds); const ty = new Date().getFullYear(); const tm = new Date().getMonth(); const tis = getTodayStr();
+        if(p==='daily') return rds === tis;
+        if(p==='monthly') return d.getFullYear()===ty && d.getMonth()===tm;
+        if(p==='quarterly') return d.getFullYear()===ty && Math.floor(d.getMonth()/3)===Math.floor(tm/3);
+        if(p==='yearly') return d.getFullYear()===ty;
+        if(p==='custom') return rds >= fd && rds <= td;
+        return true;
+    }
+
+    function generateReport(r) {
+        const p = document.getElementById(`${r}-report-period`).value; const cSr = document.getElementById(`${r}-report-client`).value;
+        let targetUser = r === 'admin' ? document.getElementById('admin-report-collector').value : 'ALL';
+        const fd = document.getElementById(`${r}-date-from`).value; const td = document.getElementById(`${r}-date-to`).value;
+        if(p==='custom' && (!fd || !td)) return showMsg("Select dates.", "error");
+        
+        let d = getCollections(); if(r === 'user') d = d.filter(c => c.collectedBy === currentUser);
+        currentReportData = d.filter(c => (cSr === 'ALL' || c.srNo === cSr) && (r === 'user' || targetUser === 'ALL' || c.collectedBy === targetUser) && filterByPeriod(c.date, p, fd, td));
+        
+        let ts = 0; const tb = document.querySelector(`#${r}-report-table tbody`); tb.innerHTML = '';
+        if(!currentReportData.length) { tb.innerHTML = `<tr><td colspan="${r==='admin'?8:7}" style="text-align:center;">No records.</td></tr>`; document.getElementById(`${r}-report-sum`).innerText = ``; return; }
+        
+        currentReportData.forEach(c => {
+            ts += parseFloat(c.amount);
+            const s = c.settled ? `<span style="color:var(--success);font-weight:bold;font-size:12px;">Paid</span>` : `<span style="color:var(--warning);font-weight:bold;font-size:12px;">Unpaid</span>`;
+            if(r==='admin') tb.innerHTML += `<tr><td>${c.date}</td><td>${c.collectedBy}</td><td>${c.srNo}</td><td><b>${c.clientName}</b></td><td>${c.pay_mode}</td><td style="font-weight:bold;">₹${parseFloat(c.amount).toFixed(2)}</td><td>${c.remarks}</td><td>${s}</td></tr>`;
+            else tb.innerHTML += `<tr><td>${c.date}</td><td>${c.srNo}</td><td><b>${c.clientName}</b></td><td>${c.pay_mode}</td><td style="font-weight:bold;">₹${parseFloat(c.amount).toFixed(2)}</td><td>${s}</td><td>${c.remarks}</td></tr>`;
+        });
+        tb.innerHTML += `<tr style="background:#F0F4F8;"><td colspan="${r==='admin'?5:4}" style="text-align:right;font-weight:bold;">TOTAL:</td><td style="font-weight:bold; color:var(--primary); font-size: 16px;">₹${ts.toFixed(2)}</td><td colspan="2"></td></tr>`;
+        document.getElementById(`${r}-report-sum`).innerText = `- Total: ₹${ts.toFixed(2)}`;
+    }
+
+    function downloadCSV(r) {
+        if(!currentReportData.length) return showMsg("No data.", "error");
+        let csv = r==='admin' ? "Date,Collector,SR No,Client,Mode,Amount,Status,Remarks\n" : "Date,SR No,Client,Mode,Amount,Status,Remarks\n";
+        currentReportData.forEach(c => {
+            const s = c.settled ? "Paid" : "Unpaid";
+            if (r==='admin') csv += `${c.date},${c.collectedBy},${c.srNo},"${c.clientName}",${c.pay_mode},${c.amount},${s},"${c.remarks}"\n`;
+            else csv += `${c.date},${c.srNo},"${c.clientName}",${c.pay_mode},${c.amount},${s},"${c.remarks}"\n`;
+        });
+        const l = document.createElement("a"); l.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv)); l.setAttribute("download", `Report_${getTodayStr()}.csv`);
+        document.body.appendChild(l); l.click(); document.body.removeChild(l);
+    }
+</script>
+</body>
+</html>
